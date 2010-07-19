@@ -1,0 +1,15 @@
+*.orig
+*~
+\#*#
+.*
+*.pyc
+*.patch
+patches-*
+patches
+series
+cscope.*
+ncscope.*
+GPATH
+GRTAGS
+GSYMS
+GTAGS
