@@ -1,1 +1,9 @@
 This is python porcelain for Git.
+
+Follow INSTALL, then...
+$ pydoc3 porcelain
+  or
+$ python3 -m porcelain
+
+Please send suggestions, problem reports and patches to,
+	Tom Grennan <tom.grennan@ericsson.com>

@@ -1,0 +1,12 @@
+To install in HOME/.local,
+$ python3 setup.py install --user
+
+Or in /usr,
+$ sudo python3 setup.py install --prefix=usr
+
+See --help for options,
+$ python3 setup.py install --help
+
+To clean up,
+$ python3 setup.py clean --all
+

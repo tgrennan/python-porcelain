@@ -4,6 +4,7 @@
 .*
 *.pyc
 *.patch
+__version__.py
 patches-*
 patches
 series
@@ -13,3 +14,4 @@ GPATH
 GRTAGS
 GSYMS
 GTAGS
+/build
