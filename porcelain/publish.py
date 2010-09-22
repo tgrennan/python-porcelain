@@ -3,13 +3,9 @@ import re
 from email.mime.text import MIMEText
 from subprocess import PIPE
 
-def publish(self,
-        dry_run=False,
-        push_log=None,
-        **post):
+def publish(self, dry_run=False, push_log=None, **post):
     """Push updates and send request-pull message.
 
-    The arguments are:
         dry-run     Don't send updates or mail message.
         push-log    Parse output of earlier update.
 
@@ -17,8 +13,7 @@ def publish(self,
         post
     """
 
-    if not len(self.git('rev-parse', '--git-dir')):
-        sys.exit('fatal: Must have an initialized git-dir')
+    assert self.git_dir
     git_dir = self.git_dir if self.git_dir else '.git'
     if push_log:
         with open(push_log) as f:
@@ -30,7 +25,7 @@ def publish(self,
     baseref = {}
     p = re.compile(r'[ \t]+(\w+)\.\.\w+[ \t]+.* -> (.*)$')
     for l in log:
-        m = p.match(l.decode())
+        m = p.match(l)
         if m:
             baseref[m.group(2)] = m.group(1)
     for name, base in baseref.items():
@@ -39,22 +34,17 @@ def publish(self,
             url = self.config['remote.' + remote + '.url']
         except KeyError:
             continue
-        ghead = ('rev-parse', '--verify', '%s^0' % name)
-        head = self.git(*ghead)[0].decode()
-        gmerge = ('merge-base', base, head)
-        merge = self.git(*gmerge)[0].decode()
-        glog = ('log', '--format=%s', '%s^..%s' % (base, base))
-        cmsg = self.git(*glog)[0].decode()
-        gshortlog = ('shortlog', '-n', '-e', '-w78,1,8', '^'+base, head)
-        gdiffstat = ('diff', '-M', '--stat', base, '%s..%s' % (merge, head))
+        head = self.git1l('rev-parse', '--verify', '%s^0' % name)
+        merge = self.git1l('merge-base', base, head)
+        cmsg = self.git1l('log', '--format=%s', '%s^..%s' % (base, base))
         body = ['I updated "%s" in,' % name]
         body.append('<%s>'% url)
         body.append('')
         body.append('with these changes since 0x%s,' % base)
         body.append('"%s"' % cmsg)
         body.append('')
-        body += [ l.decode() for l in self.git(*gshortlog) ]
-        body += [ l.decode() for l in self.git(*gdiffstat) ]
+        body += self.git('shortlog', '-n', '-e', '-w78,1,8', '^'+base, head)
+        body += self.git('diff', '-M', '--stat', base, '%s..%s' % (merge, head))
         self.post(dry_run,
                 subject='request pull of "%s"' % name,
                 text='\n'.join(body),

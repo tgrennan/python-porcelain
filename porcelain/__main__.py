@@ -3,7 +3,26 @@
 import sys
 import collections
 sys.path.insert(0, sys.path[0].replace('/porcelain',''))
-from .__init__ import Porcelain, Options, __version__
+from .__init__ import Porcelain, Dict, __version__
+
+class Options(Dict):
+    """Pop leading options from command argument list"""
+    def __init__(self, args):
+        Dict.__init__(self)
+        while len(args) and args[0].startswith('--'):
+            opt = args.pop(0)[2:]
+            if not len(opt):
+                break       # interpret '--' as end of options
+            try:
+                name, val = opt.split('=')
+                name_ = name.replace('-','_')
+                self[name_] = val
+            except ValueError:
+                name_ = opt.replace('-','_')
+                if not len(args) or args[0].startswith('--'):
+                    self[name_] = True
+                else:
+                    self[name_] = args.pop(0)
 
 args = sys.argv[1:]
 opts = Options(args)

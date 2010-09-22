@@ -5,6 +5,10 @@
 To execute a named METHOD:
 $ python3 -m porcelain [Options] METHOD [Method Options]
 
+Options:
+  --git-dir=DIR     Repository directory (default is $PWD/.git)
+  --work-tree=DIR   Work tree directory (default is $PWD)
+
 To show an attribute of class Porcelain:
 $ python3 -m porcelain ATTRIBUTE [KEYWORD]
 
@@ -31,18 +35,11 @@ From within a python3 interpreter,
 >>> porcelain.config['user.name']
 """
 
-from .base import Porcelain, Options
-from .git import git
-from .post import post
-from .publish import publish
+from .base import Porcelain, Dict
 
 try:
     from .__version__ import __version__
 except ImportError:
     __version__ = "v0.1"
-
-Porcelain.git = git
-Porcelain.post = post
-Porcelain.publish = publish
 
 __all__ = [ 'base' ]

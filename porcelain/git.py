@@ -7,17 +7,8 @@
 import sys
 from subprocess import Popen, PIPE
 
-def git(self, command, *args, **kw):
-    """Run external GIT command.
-
-    The keyword arguments are:
-        stdin       (default is None)
-        stdout      (default is PIPE)
-        stderr      (default is sys.stderr)
-    """
-    stdin=None
-    stdout=PIPE
-    stderr=sys.stderr
+def git(self, command, *args, stdin=None, stdout=PIPE, stderr=sys.stderr, **kw):
+    """Run external GIT command."""
     g = [ 'git' ]
     if self.git_dir:
         g.append('--git-dir=%s' % self.git_dir)
@@ -27,23 +18,23 @@ def git(self, command, *args, **kw):
         g.append(command)
     for k_,v in kw.items():
         k = k_.replace('_','-')
-        if k == 'stdin':
-            stdin = v
-        elif k == 'stdout':
-            stdout = v
-        elif k == 'stderr':
-            stderr = v
-        elif v == True or v == None:
+        if v == True or v == None:
             g.append('--%s' % k)
         else:
             g.append('--%s=%s' % (k, v))
     if len(args):
         g += args
-    # print('git:', g)
     p = Popen(g, stdout=stdout, stderr=stderr)
     if stderr is PIPE:
-        return p.communicate(stdin)[1].splitlines()
+        return p.communicate(stdin)[1].decode().splitlines()
     if stdout is PIPE:
-        return p.communicate(stdin)[0].splitlines()
+        return p.communicate(stdin)[0].decode().splitlines()
     p.wait()
     return p.returncode
+
+def git1l(self, command, *args, **kw):
+    """Return first line of executed GIT command or None."""
+    try:
+        return self.git(command, *args, **kw)[0]
+    except IndexError:
+        return None

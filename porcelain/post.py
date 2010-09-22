@@ -1,8 +1,24 @@
 import sys
+import re
+import pydoc
 from smtplib import SMTP
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
+
+class _MuttAliases(list):
+    def __init__(self,fn='/dev/null'):
+        """List of [alias, address] parsed from named Mutt file."""
+        list.__init__(self)
+        p = re.compile(r'alias[ \t]+([^ \t]+)[ \t]+([^\n]+)')
+        with open(fn, 'r') as f:
+            for l in f:
+                m = p.match(l)
+                if m:
+                    self.append([m.group(1),  m.group(2)])
+
+# FIXME! add parsers for: mailrc, pine, elm and gnus type aliases
+mail_aliases = {'mutt': _MuttAliases}
 
 def post(self,
         dry_run=False,
@@ -16,9 +32,8 @@ def post(self,
         text=None,
         filename=None,
         attach=None):
-    """Send mail.
+    """Emulate git-send-mail.
 
-    The keyword arguments are:
         dry-run     Print, don't send message.
         smtpserver  Default is 'localhost'
         name        From name.
@@ -66,7 +81,7 @@ def post(self,
     for opt in 'to', 'cc', 'bcc':
         val = kw[opt]
         if val:
-            for addr in val if type(val) is list else [ val ]:
+            for addr in val if isinstance(val,list) else [ val ]:
                 try:
                     addr = self.config['sendemail.alias.%s' % addr]
                 except KeyError:
@@ -80,9 +95,9 @@ def post(self,
         f = sys.stdin if filename == '-' else open(filename, 'r')
         msg.set_payload(f.read())
     if dry_run:
-        print('email:', kw['email'])
-        print('recipients:', recipients)
-        print(str(msg))
+        msg.add_header('X-From', kw['email'])
+        msg.add_header('X-Recipients', ', '.join(recipients))
+        pydoc.pager(str(msg))
     else:
         s = SMTP(kw['smtpserver'])
         nondelivery = s.sendmail(kw['email'], recipients, str(msg))
